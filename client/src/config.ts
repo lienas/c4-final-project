@@ -1,6 +1,11 @@
 // TODO: Once your application is deployed, copy an API id here so that the frontend could interact with it
 const apiId = '6ajcdngjq2'
-export const apiEndpoint = `https://${apiId}.execute-api.eu-central-1.amazonaws.com/dev`
+//endpoint for online
+//export const apiEndpoint = `https://${apiId}.execute-api.eu-central-1.amazonaws.com/dev`
+
+//endpoint for offline
+export const apiEndpoint = `http://localhost:3003/dev`
+
 
 export const authConfig = {
   // TODO: Create an Auth0 application and copy values from it into this map

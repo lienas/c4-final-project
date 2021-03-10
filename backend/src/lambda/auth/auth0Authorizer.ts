@@ -113,16 +113,16 @@ async function getSigningKey(kid: String): Promise<string> {
         throw new Error(response.statusText)
     }
 
-    const secret = response.data.keys.fiter(key => {
-        key.kid = kid
-    }).x5c
+    const secret = response.data.keys.filter(key => {
+        return key.kid === kid
+    })
 
     logger.info('Filtered secret from response',
-        {'secret': secret})
+        {'secret': secret, 'cert': secret[0].x5c})
     if (!secret) {
         logger.error('Error fetching secret')
         throw new Error('Error fetching secret')
     }
 
-    return secret
+    return secret[0].x5c[0]
 }
