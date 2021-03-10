@@ -158,6 +158,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
 
   renderTodosList() {
     return (
+      this.state.todos?
       <Grid padded>
         {this.state.todos.map((todo, pos) => {
           return (
@@ -201,7 +202,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
             </Grid.Row>
           )
         })}
-      </Grid>
+      </Grid> : <h2 style={{color: 'red'}}>no records</h2>
     )
   }
 
