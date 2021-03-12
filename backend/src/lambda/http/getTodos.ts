@@ -16,6 +16,8 @@ export const handler: APIGatewayProxyHandler =
 
         const todos = await getTodos(jwtToken)
 
+        logger.info('received todos from database', {'todos': todos})
+
         return {
             statusCode: 201,
             headers: {

@@ -1,5 +1,5 @@
 import dateFormat from 'dateformat'
-import { History } from 'history'
+import {History} from 'history'
 import update from 'immutability-helper'
 import * as React from 'react'
 import {
@@ -14,9 +14,9 @@ import {
   Loader
 } from 'semantic-ui-react'
 
-import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api'
+import {createTodo, deleteTodo, getTodos, patchTodo} from '../api/todos-api'
 import Auth from '../auth/Auth'
-import { Todo } from '../types/Todo'
+import {Todo} from '../types/Todo'
 
 interface TodosProps {
   auth: Auth
@@ -37,7 +37,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
   }
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ newTodoName: event.target.value })
+    this.setState({newTodoName: event.target.value})
   }
 
   onEditButtonClick = (todoId: string) => {
@@ -81,7 +81,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       })
       this.setState({
         todos: update(this.state.todos, {
-          [pos]: { done: { $set: !todo.done } }
+          [pos]: {done: {$set: !todo.done}}
         })
       })
     } catch {
@@ -92,6 +92,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
   async componentDidMount() {
     try {
       const todos = await getTodos(this.props.auth.getIdToken())
+      console.log('todos from cdm: ' + todos)
       this.setState({
         todos,
         loadingTodos: false
@@ -132,7 +133,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
           />
         </Grid.Column>
         <Grid.Column width={16}>
-          <Divider />
+          <Divider/>
         </Grid.Column>
       </Grid.Row>
     )
@@ -158,51 +159,51 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
 
   renderTodosList() {
     return (
-      this.state.todos?
-      <Grid padded>
-        {this.state.todos.map((todo, pos) => {
-          return (
-            <Grid.Row key={todo.todoId}>
-              <Grid.Column width={1} verticalAlign="middle">
-                <Checkbox
-                  onChange={() => this.onTodoCheck(pos)}
-                  checked={todo.done}
-                />
-              </Grid.Column>
-              <Grid.Column width={10} verticalAlign="middle">
-                {todo.name}
-              </Grid.Column>
-              <Grid.Column width={3} floated="right">
-                {todo.dueDate}
-              </Grid.Column>
-              <Grid.Column width={1} floated="right">
-                <Button
-                  icon
-                  color="blue"
-                  onClick={() => this.onEditButtonClick(todo.todoId)}
-                >
-                  <Icon name="pencil" />
-                </Button>
-              </Grid.Column>
-              <Grid.Column width={1} floated="right">
-                <Button
-                  icon
-                  color="red"
-                  onClick={() => this.onTodoDelete(todo.todoId)}
-                >
-                  <Icon name="delete" />
-                </Button>
-              </Grid.Column>
-              {todo.attachmentUrl && (
-                <Image src={todo.attachmentUrl} size="small" wrapped />
-              )}
-              <Grid.Column width={16}>
-                <Divider />
-              </Grid.Column>
-            </Grid.Row>
-          )
-        })}
-      </Grid> : <h2 style={{color: 'red'}}>no records</h2>
+      this.state.todos ?
+        <Grid padded>
+          {this.state.todos.map((todo, pos) => {
+            return (
+              <Grid.Row key={todo.todoId}>
+                <Grid.Column width={1} verticalAlign="middle">
+                  <Checkbox
+                    onChange={() => this.onTodoCheck(pos)}
+                    checked={todo.done}
+                  />
+                </Grid.Column>
+                <Grid.Column width={10} verticalAlign="middle">
+                  {todo.name}
+                </Grid.Column>
+                <Grid.Column width={3} floated="right">
+                  {todo.dueDate}
+                </Grid.Column>
+                <Grid.Column width={1} floated="right">
+                  <Button
+                    icon
+                    color="blue"
+                    onClick={() => this.onEditButtonClick(todo.todoId)}
+                  >
+                    <Icon name="pencil"/>
+                  </Button>
+                </Grid.Column>
+                <Grid.Column width={1} floated="right">
+                  <Button
+                    icon
+                    color="red"
+                    onClick={() => this.onTodoDelete(todo.todoId)}
+                  >
+                    <Icon name="delete"/>
+                  </Button>
+                </Grid.Column>
+                {todo.attachmentUrl && (
+                  <Image src={todo.attachmentUrl} size="small" wrapped/>
+                )}
+                <Grid.Column width={16}>
+                  <Divider/>
+                </Grid.Column>
+              </Grid.Row>
+            )
+          })}
+        </Grid> : <h2 style={{color: 'red'}}>Nothing to Do :-)</h2>
     )
   }
 

@@ -2,13 +2,14 @@ import * as uuid from 'uuid'
 import {TodoItem} from "../models/TodoItem";
 import {createLogger} from "../utils/logger";
 import {CreateTodoRequest} from "../requests/CreateTodoRequest";
+import {UpdateTodoRequest} from "../requests/UpdateTodoRequest";
 import {parseUserId} from "../auth/utils";
 import {TodoAccess} from "../dataLayer/todoAccess";
 
 const logger = createLogger('todo-business-layer')
 const todoAccess = new TodoAccess()
 
-export async function getTodos(token: string) : Promise<TodoItem[]>{
+export async function getTodos(token: string): Promise<TodoItem[]> {
 
     const userId = parseUserId(token)
     logger.info('getTodos for ' + userId)
@@ -17,10 +18,11 @@ export async function getTodos(token: string) : Promise<TodoItem[]>{
 
 export async function createTodo(
     request: CreateTodoRequest,
-    token: string):Promise<TodoItem> {
+    userId: string): Promise<TodoItem> {
 
     const itemId = uuid.v4()
-    const userId = parseUserId(token)
+
+    logger.info('Call Data-layer to create new Todo', {'Request': request, 'userId': userId})
 
     return await todoAccess.createTodo(
         {
@@ -33,5 +35,23 @@ export async function createTodo(
             attachmentUrl: ''
         }
     )
+}
 
+export async function updateTodo(
+    request: UpdateTodoRequest,
+    userId: string,
+    todoId: string): Promise<TodoItem> {
+
+    return await todoAccess.updateTodo(todoId, userId, request)
+}
+
+export async function deleteTodo(
+    userId: string,
+    todoId: string
+): Promise<void> {
+    return await todoAccess.deleteTodo(todoId, userId)
+}
+
+export async function getUploadUrl(todoId:string): Promise<string> {
+    return await todoAccess.generateUploadUrl(todoId)
 }
