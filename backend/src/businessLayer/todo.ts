@@ -3,15 +3,13 @@ import {TodoItem} from "../models/TodoItem";
 import {createLogger} from "../utils/logger";
 import {CreateTodoRequest} from "../requests/CreateTodoRequest";
 import {UpdateTodoRequest} from "../requests/UpdateTodoRequest";
-import {parseUserId} from "../auth/utils";
 import {TodoAccess} from "../dataLayer/todoAccess";
 
 const logger = createLogger('todo-business-layer')
 const todoAccess = new TodoAccess()
 
-export async function getTodos(token: string): Promise<TodoItem[]> {
+export async function getTodos(userId: string): Promise<TodoItem[]> {
 
-    const userId = parseUserId(token)
     logger.info('getTodos for ' + userId)
     return await todoAccess.getTodos(userId)
 }
@@ -52,6 +50,6 @@ export async function deleteTodo(
     return await todoAccess.deleteTodo(todoId, userId)
 }
 
-export async function getUploadUrl(todoId:string): Promise<string> {
-    return await todoAccess.generateUploadUrl(todoId)
+export async function getUploadUrl(todoId:string, userId:string): Promise<string> {
+    return await todoAccess.generateUploadUrl(todoId, userId)
 }

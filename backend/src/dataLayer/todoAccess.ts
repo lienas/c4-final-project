@@ -35,7 +35,7 @@ function createS3Client() {
             endpoint: new AWS.Endpoint('http://localhost:4569'),
         })
     }
-
+    logger.info('Creating S3 instance')
     return new XAWS.S3({signatureVersion: 'v4'})
 }
 
@@ -48,7 +48,7 @@ export class TodoAccess {
 
     constructor(
         private readonly docClient: DocumentClient = createDynamoDBClient(),
-        private  readonly s3Client = createS3Client(),
+        private readonly s3Client = createS3Client(),
         private readonly todoTable = process.env.TODOS_TABLE,
         private readonly indexName = process.env.INDEX_NAME) {
     }
@@ -140,10 +140,43 @@ export class TodoAccess {
 
     /**
      * generates an upload-url in AWS-S3
+     * an update todo item
      */
-    async generateUploadUrl(todoId: string): Promise<string> {
+    async generateUploadUrl(todoId: string, userId: string): Promise<string> {
 
-        logger.info('get UploadUrl from database', {'bucket': bucket, 'todoId': todoId, 'expires': urlExpiration})
+        logger.info('get AttachmentUrl', {'bucket': bucket, 'todoId': todoId, 'userId': userId})
+
+        //get the download-url
+        const attachmentUrl = await this.s3Client.getSignedUrl('getObject', {
+                Bucket: bucket,
+                Key: todoId
+            }
+        )
+
+        logger.info('received AttachmentUrl', {'url': attachmentUrl})
+
+        // update the to-do item
+        try {
+            await this.docClient.update({
+                TableName: this.todoTable,
+                Key: {
+                    'todoId': todoId,
+                    'userId': userId
+                },
+                UpdateExpression: "set #url = :url",
+                ExpressionAttributeValues: {
+                    ":url": attachmentUrl
+                },
+                ExpressionAttributeNames: {
+                    '#url': 'attachmentUrl'
+                }
+            }).promise()
+        } catch (err) {
+            logger.error('there was an error updating todo-item', {'error': err})
+        }
+
+        logger.info('get UploadUrl', {'bucket': bucket, 'todoId': todoId, 'expires': urlExpiration})
+
 
         return this.s3Client.getSignedUrl('putObject', {
             Bucket: bucket,

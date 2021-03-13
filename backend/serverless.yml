@@ -40,7 +40,7 @@ provider:
   environment:
     TODOS_TABLE: ToDos-2-${self:provider.stage}
     INDEX_NAME: IndexTable-${self:provider.stage}
-    _X_AMZN_TRACE_ID: '4711'
+    #_X_AMZN_TRACE_ID: '4711'
     BUCKET_NAME: todo-osde-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 3000
 
@@ -72,7 +72,7 @@ functions:
           - dynamodb:Scan
           - dynamodb:Query
           - dynamodb:GetItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.INDEX_NAME}
 
   # function to create a new todos
   CreateTodo:
@@ -83,6 +83,12 @@ functions:
           path: todos
           cors: true
           authorizer: Auth
+          request:
+            schema:
+              application/json: ${file(models/create-todo-request.json)}
+          documentation:
+            summary: Create a new todo
+            description: Create a new todo for the signed in user
 
     iamRoleStatements:
        - Effect: Allow
@@ -99,6 +105,13 @@ functions:
           path: todos/{todoId}
           cors: true
           authorizer: Auth
+          request:
+            schema:
+              application/json: ${file(models/update-todo-request.json)}
+          documentation:
+            summary: Update a todo
+            description: Update an existing todo for the signed in user
+
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -130,13 +143,18 @@ functions:
           cors: true
           authorizer: Auth
 
-    # permissions for s3-Bucket and X-Ray
+    # permissions for s3-Bucket, to-do-table and X-Ray
     iamRoleStatements:
       - Effect: Allow
         Action:
           - s3:PutObject
           - s3:GetObject
         Resource: 'arn:aws:s3:::${self:provider.environment.BUCKET_NAME}/*'
+      # needs permission to update a to-do item
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
           - xray:PutTraceSegments
@@ -145,7 +163,6 @@ functions:
 
 resources:
   Resources:
-    # TODO: Add any necessary AWS resources
     GatewayResponseDefault4XX:
       Type: AWS::ApiGateway::GatewayResponse
       Properties:
@@ -188,3 +205,16 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.BUCKET_NAME}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedOrigins:
+                - '*'
+              AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - DELETE
+                - HEAD
+              MaxAge: 3000

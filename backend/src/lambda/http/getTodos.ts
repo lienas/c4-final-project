@@ -3,18 +3,18 @@ import 'source-map-support/register'
 import {APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler} from 'aws-lambda'
 import {getTodos} from "../../businessLayer/todo";
 import {createLogger} from "../../utils/logger";
+import {getUserId} from "../utils";
 
 const logger = createLogger('GetTodos-API')
 
 export const handler: APIGatewayProxyHandler =
     async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-        // TODO: Get all TODO items for a current user
-        const authorization = event.headers.Authorization
-        const jwtToken = authorization.split(' ')[1]
 
-        logger.info('API Called with JWT-Token = ' + jwtToken)
+        const userId = getUserId(event)
 
-        const todos = await getTodos(jwtToken)
+        logger.info('API Called for user = ' + userId)
+
+        const todos = await getTodos(userId)
 
         logger.info('received todos from database', {'todos': todos})
 
