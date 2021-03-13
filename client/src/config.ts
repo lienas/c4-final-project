@@ -1,10 +1,9 @@
 const apiId = '6ajcdngjq2'
 //endpoint for online
-//export const apiEndpoint = `https://${apiId}.execute-api.eu-central-1.amazonaws.com/dev`
+export const apiEndpoint = `https://${apiId}.execute-api.eu-central-1.amazonaws.com/dev`
 
 //endpoint for offline
-export const apiEndpoint = `http://localhost:3003/dev`
-
+//export const apiEndpoint = `http://localhost:3003/dev`
 
 export const authConfig = {
   domain: 'dev-osde.eu.auth0.com',            // Auth0 domain

@@ -7,6 +7,7 @@ plugins:
   - serverless-dynamodb-local
   - serverless-offline
   - serverless-s3-local
+
 custom:
   #configuration for offline testing
   serverless-offline:
@@ -37,32 +38,26 @@ provider:
     apiGateway: true
 
   environment:
-    TODOS_TABLE: ToDos-${self:provider.stage}
+    TODOS_TABLE: ToDos-2-${self:provider.stage}
     INDEX_NAME: IndexTable-${self:provider.stage}
-    _X_AMZN_TRACE_ID: 'local'
-    BUCKET_NAME: ToDo-osde-${self:provider.stage}
+    _X_AMZN_TRACE_ID: '4711'
+    BUCKET_NAME: todo-osde-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 3000
 
-  # todo: restrict permission for each lambda
   iamRoleStatements:
     - Effect: Allow
       Action:
         - codedeploy:*
       Resource:
         - '*'
-    - Effect: Allow
-      Action:
-        - dynamodb:Scan
-        - dynamodb:PutItem
-        - dynamodb:GetItem
-      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
 functions:
 
+  # function to authenticate a user
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
 
-  # TODO: Configure this function
+  # function to query todos
   GetTodos:
     handler: src/lambda/http/getTodos.handler
     events:
@@ -71,39 +66,82 @@ functions:
           path: todos
           cors: true
           authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+          - dynamodb:Query
+          - dynamodb:GetItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
-
-  # TODO: Configure this function
+  # function to create a new todos
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
     events:
       - http:
           method: post
           path: todos
+          cors: true
+          authorizer: Auth
 
-  # TODO: Configure this function
+    iamRoleStatements:
+       - Effect: Allow
+         Action:
+           - dynamodb:PutItem
+         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+
+  # function to update an item
   UpdateTodo:
     handler: src/lambda/http/updateTodo.handler
     events:
       - http:
           method: patch
           path: todos/{todoId}
+          cors: true
+          authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
-  # TODO: Configure this function
+  #function to delete an item
   DeleteTodo:
     handler: src/lambda/http/deleteTodo.handler
     events:
       - http:
           method: delete
           path: todos/{todoId}
+          cors: true
+          authorizer: Auth
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
-  # TODO: Configure this function
+  # function to generate an upload-url
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
     events:
       - http:
           method: post
           path: todos/{todoId}/attachment
+          cors: true
+          authorizer: Auth
+
+    # permissions for s3-Bucket and X-Ray
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:GetObject
+        Resource: 'arn:aws:s3:::${self:provider.environment.BUCKET_NAME}/*'
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: '*'
 
 resources:
   Resources:
@@ -146,7 +184,7 @@ resources:
             Projection:
               ProjectionType: ALL # What attributes will be copied to an index
 
-    ToDo-Bucket:
+    ToDoBucket:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.BUCKET_NAME}
